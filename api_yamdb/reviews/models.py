@@ -71,8 +71,24 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    #    review ForeignKey
-    #    text
-    #    author
-    #    pub_date
-    pass
+    text = models.TextField(verbose_name='Текст комментария')
+    rewiew = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Отзыв'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='comments',
+        verbose_name='Автор комментария',
+    )
+    pub_date = models.DateField(
+        auto_now_add=True,
+        verbose_name='Дата публикации комментария',
+    )
+
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
