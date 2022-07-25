@@ -1,2 +1,3 @@
-# api_yamdb
-api_yamdb
+# YaMDb REST API
+
+TODO
