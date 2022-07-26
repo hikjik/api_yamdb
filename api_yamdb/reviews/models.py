@@ -60,7 +60,7 @@ class Review(models.Model):
         ],
         verbose_name='Оценка произведения',
     )
-    pub_date = models.DateField(
+    pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата публикации отзыва',
     )
@@ -84,7 +84,7 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Автор комментария',
     )
-    pub_date = models.DateField(
+    pub_date = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Дата публикации комментария',
     )
