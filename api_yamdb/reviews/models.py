@@ -1,15 +1,7 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 from django.db import models
 
-
-class User(AbstractUser):
-    #    username
-    #    email
-    #    role (choices одно из трех: user, admin, moderator)
-    #    bio
-    #    first_name
-    #    last_name
-    pass
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -52,9 +44,6 @@ class Title(models.Model):
     )
     genre = models.ManyToManyField(
         Genre,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
         through='GenreTitle',
         verbose_name='жанры произведения'
     )
@@ -78,7 +67,9 @@ class Title(models.Model):
 class GenreTitle(models.Model):
     genre = models.ForeignKey(
         Genre,
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True
     )
     title = models.ForeignKey(
         Title,
