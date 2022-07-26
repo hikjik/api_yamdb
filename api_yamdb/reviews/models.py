@@ -13,29 +13,64 @@ class User(AbstractUser):
 
 
 class Category(models.Model):
-    #    name
-    #    slug
-    pass
+    name = models.CharField('название Категории',
+                            max_length=250
+                            )
+    slug = models.SlugField('слаг Группы',
+                            unique=True
+                            )
+
+    def __str__(self):
+        return self.title
 
 
 class Genre(models.Model):
-    #    name
-    #    slug
-    pass
+    name = models.CharField('название жанра',
+                            max_length=250
+                            )
+    slug = models.SlugField('слаг жанра',
+                            unique=True
+                            )
+
+    def __str__(self):
+        return self.title
 
 
 class Title(models.Model):
-    #    name
-    #    year
-    #    category ForeignKey
-    #    ...
-    pass
+    name = models.CharField('название произведения',
+                            max_length=250
+                            )
+    year = models.DateField('год публикации произведения',
+                            auto_now=False,
+                            auto_now_add=False
+                            )
+    genre = models.ManyToManyField(Genre,
+                                   on_delete=models.SET_NULL,
+                                   through='GenreTitle',
+                                   verbose_name='жанр произведения'
+                                   )
+    category = models.ForeignKey(Category,
+                                 on_delete=models.SET_NULL,
+                                 verbose_name='категория произведения'
+                                 )
+    description = models.TextField('описание произведения',
+                                   max_length=400
+                                   )
+
+    def __str__(self):
+        return self.name
 
 
 class GenreTitle(models.Model):
-    #    genre ForeignKey
-    #    title ForeignKey
-    pass
+    genre = models.ForeignKey(Genre,
+                              on_delete=models.CASCADE
+                              )
+    title = models.ForeignKey(Title,
+                              on_delete=models.CASCADE
+                              )
+
+    def __str__(self):
+        return f'{self.genre} {self.title}'
 
 
 class Review(models.Model):
