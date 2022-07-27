@@ -1,9 +1,33 @@
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
-User = get_user_model()
+#  User = get_user_model()
+
+ROLES = (
+    ('user','пользователь'),
+    ('moderator','Модератор'),
+    ('admin', 'Администратор'),
+)
+
+class User(AbstractUser):
+    username = models.CharField(
+        max_length = 50,
+        unique = True
+    )
+    first_name = models.TextField()
+    second_name = models.TextField()
+    bio = models.TimeField(
+        blank = True
+    )
+    email = models.EmailField(unique = True)
+    role = models.TimeField(
+        choices=ROLES
+    )
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
