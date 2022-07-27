@@ -18,11 +18,11 @@ class User(AbstractUser):
     )
     first_name = models.TextField()
     second_name = models.TextField()
-    bio = models.TimeField(
+    bio = models.TextField(
         blank = True
     )
     email = models.EmailField(unique = True)
-    role = models.TimeField(
+    role = models.CharField(
         choices=ROLES
     )
 
