@@ -1,22 +1,20 @@
-from django.shortcuts import render
-from django.core.mail import send_mail
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
-
-@api_view(['POST'])
-def signUp(request):
-    user = request.data['username']
-    email = request.data['email']
-    return Response(get_tokens_for_user(user))
+from api.serializers import (CategorySerializer, GenreSerializer,
+                             TitleSerializer)
+from rest_framework import viewsets
+from reviews.models import Category, Genre, Title
 
 
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
 

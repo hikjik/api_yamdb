@@ -63,10 +63,10 @@ class Title(models.Model):
         'название произведения',
         max_length=250
     )
-    year = models.DateField(
+    year = models.IntegerField(
         'год публикации произведения',
-        auto_now=False,
-        auto_now_add=False
+        blank=True,
+        null=True
     )
     genre = models.ManyToManyField(
         Genre,
@@ -139,7 +139,7 @@ class Review(models.Model):
 
 class Comment(models.Model):
     text = models.TextField(verbose_name='Текст комментария')
-    rewiew = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
