@@ -39,10 +39,10 @@ class Title(models.Model):
         'название произведения',
         max_length=250
     )
-    year = models.DateField(
+    year = models.IntegerField(
         'год публикации произведения',
-        auto_now=False,
-        auto_now_add=False
+        blank=True,
+        null=True
     )
     genre = models.ManyToManyField(
         Genre,
