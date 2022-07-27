@@ -23,7 +23,8 @@ class User(AbstractUser):
     )
     email = models.EmailField(unique = True)
     role = models.CharField(
-        choices=ROLES
+        choices=ROLES,
+        max_length=20
     )
 
     def __str__(self):
