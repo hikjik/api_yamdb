@@ -42,11 +42,12 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(
         'название Категории',
-        max_length=250
+        max_length=256
     )
     slug = models.SlugField(
         'слаг Группы',
-        unique=True
+        unique=True,
+        max_length=50
     )
 
     def __str__(self):
