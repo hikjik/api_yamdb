@@ -1,9 +1,42 @@
-
-from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
-User = get_user_model()
+
+class User(AbstractUser):
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+
+    ROLES = [
+        (USER, 'Пользователь'),
+        (ADMIN, 'Администратор'),
+        (MODERATOR, 'Модератор'),
+    ]
+
+    username = models.CharField(
+        max_length=50,
+        unique=True
+    )
+    first_name = models.TextField()
+    second_name = models.TextField()
+    bio = models.TextField(
+        blank=True
+    )
+    email = models.EmailField(unique=True)
+    role = models.CharField(
+        choices=ROLES,
+        max_length=20
+    )
+
+    def is_admin(self):
+        return self.role == User.ADMIN
+
+    def is_moderator(self):
+        return self.role == User.MODERATOR
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
@@ -116,7 +149,7 @@ class Review(models.Model):
 
 class Comment(models.Model):
     text = models.TextField(verbose_name='Текст комментария')
-    rewiew = models.ForeignKey(
+    review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments',
