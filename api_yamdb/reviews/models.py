@@ -1,30 +1,41 @@
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
-ROLES = (
-    ('user','пользователь'),
-    ('moderator','Модератор'),
-    ('admin', 'Администратор'),
-)
 
 class User(AbstractUser):
+    USER = 'user'
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+
+    ROLES = [
+        (USER, 'Пользователь'),
+        (ADMIN, 'Администратор'),
+        (MODERATOR, 'Модератор'),
+    ]
+
     username = models.CharField(
-        max_length = 50,
-        unique = True
+        max_length=50,
+        unique=True
     )
     first_name = models.TextField()
     second_name = models.TextField()
     bio = models.TextField(
-        blank = True
+        blank=True
     )
-    email = models.EmailField(unique = True)
+    email = models.EmailField(unique=True)
     role = models.CharField(
         choices=ROLES,
         max_length=20
     )
-    confirmation_code = models.CharField(max_length=32, default = 0)
+    confirmation_code = models.CharField(max_length=32, default=0)
     is_activated = models.BooleanField(default=False)
+
+    def is_admin(self):
+        return self.role == User.ADMIN
+
+    def is_moderator(self):
+        return self.role == User.MODERATOR
 
     def __str__(self):
         return self.username
@@ -33,11 +44,12 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(
         'название Категории',
-        max_length=250
+        max_length=256
     )
     slug = models.SlugField(
         'слаг Группы',
-        unique=True
+        unique=True,
+        max_length=50
     )
 
     def __str__(self):
