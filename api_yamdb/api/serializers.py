@@ -1,3 +1,5 @@
+from xml.dom.minidom import CharacterData
+from django.forms import CharField
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
 
@@ -25,7 +27,7 @@ class TitleSerializer(serializers.ModelSerializer):
 class UserSingUpSerializer(serializers.ModelSerializer):
     username = serializers.CharField(validators=[])
     email = serializers.CharField(validators=[])
-    
+
     class Meta:
         fields = ('username', 'email')
         model = User
@@ -48,9 +50,10 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
+    first_name = serializers.TimeField(required=False)
+    second_name = serializers.TimeField(required=False)
     class Meta:
-        fields = ('username', 'email', 'role')
+        fields = ('username', 'email', 'role', 'first_name', 'second_name')
         model = User
 
 

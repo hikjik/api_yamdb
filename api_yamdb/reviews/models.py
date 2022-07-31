@@ -26,7 +26,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     role = models.CharField(
         choices=ROLES,
-        max_length=20
+        max_length=20,
+        default=USER,
     )
     confirmation_code = models.CharField(max_length=32, default=0)
 

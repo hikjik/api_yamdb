@@ -3,7 +3,7 @@ from reviews.models import User
 
 
 class IsAdminPermission(BasePermission):
-    def has_object_permission(self, request, view, obj):
+    def has_permission(self, request, view):
         return (
             User.objects.get(username=request.user).role == 'admin'
         )

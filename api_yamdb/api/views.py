@@ -1,6 +1,7 @@
 
 import hashlib
 from datetime import datetime
+from django.http import Http404
 
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -11,7 +12,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.filters import SearchFilter
 
 
@@ -52,7 +53,7 @@ def send_confirmation_code(username, email):
 
 
 def get_tokens_for_user(user):
-    refresh = AccessToken.for_user(user)
+    refresh = RefreshToken.for_user(user)
     return {
         'access': str(refresh.access_token),
     }
@@ -94,10 +95,14 @@ class UserGetToken(APIView):
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
     permission_classes = (IsAdminPermission,)
+
 
     def perform_create(self, serializer):
         serializer.save()
+
+    # def destroy(self, request, *args, **kwargs):
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
