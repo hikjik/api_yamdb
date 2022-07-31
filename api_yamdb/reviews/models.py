@@ -23,6 +23,8 @@ class User(AbstractUser):
         choices=ROLES,
         max_length=20
     )
+    confirmation_code = models.CharField(max_length=32, default = 0)
+    is_activated = models.BooleanField(default=False)
 
     def __str__(self):
         return self.username
