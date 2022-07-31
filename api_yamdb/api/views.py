@@ -7,8 +7,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, viewsets
-from rest_framework.pagination import (LimitOffsetPagination,
-                                       PageNumberPagination)
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from reviews.models import Category, Genre, Review, Title
 
@@ -63,7 +62,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         IsAdminOrModeratorOrAuthorOrReadOnly,
     ]
 
-    pagination_class = PageNumberPagination
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         title = get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -80,7 +79,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         IsAuthenticatedOrReadOnly,
         IsAdminOrModeratorOrAuthorOrReadOnly,
     ]
-    pagination_class = PageNumberPagination
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         review = get_object_or_404(
