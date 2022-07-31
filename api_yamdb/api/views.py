@@ -13,11 +13,16 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from reviews.models import Category, Genre, Review, Title
 
 
+class ListCreateDestroyViewSet(
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.DestroyModelMixin,
+        viewsets.GenericViewSet):
+    pass
+
+
 class CategoryViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
+    ListCreateDestroyViewSet
 ):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -28,10 +33,7 @@ class CategoryViewSet(
 
 
 class GenreViewSet(
-    mixins.ListModelMixin,
-    mixins.CreateModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet
+    ListCreateDestroyViewSet
 ):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
