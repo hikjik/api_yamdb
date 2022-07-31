@@ -6,12 +6,12 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.filters import SearchFilter
 
 
@@ -52,7 +52,7 @@ def send_confirmation_code(username, email):
 
 
 def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
+    refresh = AccessToken.for_user(user)
     return {
         'access': str(refresh.access_token),
     }
@@ -63,13 +63,21 @@ class UserSignUp(APIView):
     def post(self, request):
         serializer = UserSingUpSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            send_confirmation_code(
-                request.data['username'],
-                request.data['email']
-            )
+            username = request.data['username']
+            email = request.data['email']
+            if User.objects.filter(username = username).exists():
+                send_confirmation_code(
+                    username,
+                    email
+                )
+            else:
+                serializer.save()
+                send_confirmation_code(
+                    username,
+                    email
+                )
             return Response(serializer.data)
-        return Response(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserGetToken(APIView):
@@ -78,9 +86,9 @@ class UserGetToken(APIView):
         if serializer.is_valid():
             jwt_token = get_tokens_for_user(
                 User.objects.get(username=request.data['username']))
-            return Response({'JWT token': jwt_token})
+            return Response({'token': jwt_token})
         else:
-            return Response(serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -90,8 +98,6 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
-        send_confirmation_code(
-            self.request.data['username'], self.request.data['email'])
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

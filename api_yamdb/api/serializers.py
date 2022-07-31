@@ -23,6 +23,9 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSingUpSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(validators=[])
+    email = serializers.CharField(validators=[])
+    
     class Meta:
         fields = ('username', 'email')
         model = User
@@ -37,7 +40,6 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
         model = User
 
     def validate(self, data):
-        print(data)
         user_obj = User.objects.get(username=data['username'])
         if user_obj.confirmation_code == data['confirmation_code']:
             return data
