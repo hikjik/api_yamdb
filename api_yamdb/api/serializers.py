@@ -48,8 +48,6 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
         model = User
 
     def validate(self, data):
-
-
         if User.objects.filter(username=data['username']).exists():
             user_obj = User.objects.get(username=data['username'])
             if user_obj.confirmation_code == data['confirmation_code']:

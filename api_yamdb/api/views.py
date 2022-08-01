@@ -59,9 +59,7 @@ def send_confirmation_code(data):
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     token = str(refresh.access_token)
-    # print('token: {}'.format(token))
     return token
-
 
 
 class UserSignUp(APIView):
@@ -84,10 +82,6 @@ class UserSignUp(APIView):
         return Response(serializer_1.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-        
-
-
 class UserGetToken(APIView):
     def post(self, request):
         serializer = UserGetTokenSerializer(data=request.data)
@@ -100,7 +94,6 @@ class UserGetToken(APIView):
                 if serializer._errors['non_field_errors'][0] == 'User does not exist':
                     return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -116,7 +109,6 @@ class UsersViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
-
 
 
 
