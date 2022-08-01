@@ -34,10 +34,14 @@ from api.permissions import (
 )
 
 
-def send_confirmation_code(username, email):
+def send_confirmation_code(data):
+    username = data['username']
+    email = data['email']
+
     timestamp = datetime.now().timestamp()
     string_to_hash = username + email + str(timestamp)
     confirmation_code = hashlib.md5(string_to_hash.encode('utf-8')).hexdigest()
+
     send_mail(
         'Verification Code',
         'Hello {}. Your confirmation code is: {}'.format(
@@ -54,31 +58,34 @@ def send_confirmation_code(username, email):
 
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
-    return {
-        'access': str(refresh.access_token),
-    }
+    token = str(refresh.access_token)
+    # print('token: {}'.format(token))
+    return token
+
 
 
 class UserSignUp(APIView):
 
     def post(self, request):
-        serializer = UserSingUpSerializer(data=request.data)
-        if serializer.is_valid():
+        serializer_1 = UserSingUpSerializer(data=request.data)
+        if serializer_1.is_valid():
             username = request.data['username']
             email = request.data['email']
-            if User.objects.filter(username = username).exists():
-                send_confirmation_code(
-                    username,
-                    email
-                )
+            if User.objects.filter(username = username, email = email).exists():
+                send_confirmation_code(request.data)
+                return Response(serializer_1.data)
             else:
-                serializer.save()
-                send_confirmation_code(
-                    username,
-                    email
-                )
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                serializer = UserSerializer(data=request.data)
+                if serializer.is_valid():
+                    serializer.save()
+                    send_confirmation_code(request.data)
+                    return Response(serializer_1.data)
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer_1.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+        
 
 
 class UserGetToken(APIView):
@@ -89,20 +96,28 @@ class UserGetToken(APIView):
                 User.objects.get(username=request.data['username']))
             return Response({'token': jwt_token})
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if 'non_field_errors' in serializer._errors:
+                if serializer._errors['non_field_errors'][0] == 'User does not exist':
+                    return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
     permission_classes = (IsAdminPermission,)
+    lookup_field = 'username'
 
+    def retrieve(self, request, *args, **kwargs):
+        if kwargs.get('username') == 'me':
+            return Response(self.get_serializer(request.user).data)
+        return super().retrieve(request, args, kwargs)
 
     def perform_create(self, serializer):
         serializer.save()
 
-    # def destroy(self, request, *args, **kwargs):
+
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

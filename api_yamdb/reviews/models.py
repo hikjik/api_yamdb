@@ -19,7 +19,7 @@ class User(AbstractUser):
         unique=True
     )
     first_name = models.TextField()
-    second_name = models.TextField()
+    last_name = models.TextField()
     bio = models.TextField(
         blank=True
     )

@@ -1,7 +1,7 @@
-from xml.dom.minidom import CharacterData
-from django.forms import CharField
+
 from rest_framework import serializers
 from django.core.exceptions import ValidationError
+from collections import OrderedDict
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
 
@@ -25,8 +25,14 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class UserSingUpSerializer(serializers.ModelSerializer):
+
     username = serializers.CharField(validators=[])
-    email = serializers.CharField(validators=[])
+    email = serializers.EmailField(validators=[])
+
+    def validate(self, attrs):
+        if attrs['username'] == 'me':
+            raise serializers.ValidationError({"cannot create user me"})
+        return super().validate(attrs)
 
     class Meta:
         fields = ('username', 'email')
@@ -42,18 +48,28 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
         model = User
 
     def validate(self, data):
-        user_obj = User.objects.get(username=data['username'])
-        if user_obj.confirmation_code == data['confirmation_code']:
-            return data
-        else:
-            raise ValidationError('Confirmation code is incorrect')
 
+
+        if User.objects.filter(username=data['username']).exists():
+            user_obj = User.objects.get(username=data['username'])
+            if user_obj.confirmation_code == data['confirmation_code']:
+                return data
+            else:
+                raise ValidationError('Confirmation code is incorrect')
+        raise ValidationError('User does not exist')
 
 class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.TimeField(required=False)
-    second_name = serializers.TimeField(required=False)
+    last_name = serializers.TimeField(required=False)
+    bio = serializers.TimeField(required=False)
+    role = serializers.TimeField(required=False)
+
+    def to_representation(self, instance):
+        result = super(UserSerializer, self).to_representation(instance)
+        return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
+
     class Meta:
-        fields = ('username', 'email', 'role', 'first_name', 'second_name')
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
         model = User
 
 
