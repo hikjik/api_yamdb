@@ -1,26 +1,81 @@
 
-from rest_framework import serializers
-from django.core.exceptions import ValidationError
-from collections import OrderedDict
+from datetime import datetime
 
-from reviews.models import Category, Genre, Title, Review, Comment, User
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
+
+from api.fields import CurrentTitleDefault
+from reviews.models import Category, Comment, Genre, Review, Title
 
 
 class CategorySerializer(serializers.ModelSerializer):
+
     class Meta:
-        fields = ('__all__')
+        fields = (
+            'name',
+            'slug'
+        )
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
+
     class Meta:
-        fields = ('__all__')
+        fields = (
+            'name',
+            'slug'
+        )
         model = Genre
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitlePostSerializer(serializers.ModelSerializer):
+    description = serializers.IntegerField(required=False)
+    genre = serializers.SlugRelatedField(
+        many=True, slug_field='slug',
+        queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+
     class Meta:
-        fields = ('__all__')
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category'
+        )
+        model = Title
+
+        def validate_year(self, value):
+            if value > datetime.now().year:
+                raise serializers.ValidationError(
+                    'Нельзя добавлять произведения, которые еще не вышли'
+                )
+            return value
+
+
+class TitleGetSerializer(serializers.ModelSerializer):
+    category = CategorySerializer(read_only=True)
+    genre = GenreSerializer(many=True, read_only=True)
+    description = serializers.StringRelatedField(
+        required=False, read_only=True
+    )
+    rating = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        fields = (
+            'id',
+            'name',
+            'year',
+            'rating',
+            'description',
+            'genre',
+            'category'
+        )
         model = Title
 
 
@@ -75,19 +130,29 @@ class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         slug_field='username',
-        read_only=True
+        read_only=True,
+    )
+    title = serializers.HiddenField(
+        default=CurrentTitleDefault(),
     )
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
         model = Review
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Review.objects.all(),
+                fields=('author', 'title'),
+                message="Запрещено оставлять отзыв на одно произведение дважды"
+            ),
+        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
         slug_field='username',
-        read_only=True
+        read_only=True,
     )
 
     class Meta:
