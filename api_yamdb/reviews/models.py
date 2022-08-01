@@ -19,15 +19,17 @@ class User(AbstractUser):
         unique=True
     )
     first_name = models.TextField()
-    second_name = models.TextField()
+    last_name = models.TextField()
     bio = models.TextField(
         blank=True
     )
     email = models.EmailField(unique=True)
     role = models.CharField(
         choices=ROLES,
-        max_length=20
+        max_length=20,
+        default=USER,
     )
+    confirmation_code = models.CharField(max_length=32, default=0)
 
     def is_admin(self):
         return self.role == User.ADMIN

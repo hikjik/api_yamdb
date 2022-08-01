@@ -1,4 +1,12 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+from reviews.models import User
+
+
+class IsAdminPermission(BasePermission):
+    def has_permission(self, request, view):
+        return (
+            User.objects.get(username=request.user).role == 'admin' or request.user.is_superuser
+         )
 
 
 class IsAdminOrReadOnly(BasePermission):
