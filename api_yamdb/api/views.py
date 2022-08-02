@@ -114,22 +114,17 @@ class UsersViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
-
- 
-
-
-
-
-
-
-
-
 class ListCreateDestroyViewSet(
         mixins.ListModelMixin,
         mixins.CreateModelMixin,
         mixins.DestroyModelMixin,
         viewsets.GenericViewSet):
     pass
+
+ 
+
+
+
 
 
 class CategoryViewSet(
