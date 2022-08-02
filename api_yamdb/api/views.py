@@ -121,7 +121,7 @@ class CategoryViewSet(
     lookup_field = 'slug'
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
@@ -132,7 +132,7 @@ class GenreViewSet(
     queryset = Genre.objects.all()
     lookup_field = 'slug'
     serializer_class = GenreSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly, ]
     pagination_class = LimitOffsetPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name',)

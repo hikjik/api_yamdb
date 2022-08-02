@@ -120,10 +120,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         result = super(UserSerializer, self).to_representation(instance)
-        return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
+        return OrderedDict([(key, result[key]) for key in result
+                            if result[key] is not None])
 
     class Meta:
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
         model = User
 
 
