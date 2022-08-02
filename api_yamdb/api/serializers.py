@@ -1,11 +1,10 @@
 
-from datetime import datetime
 from collections import OrderedDict
-
-from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator, ValidationError
+from datetime import datetime
 
 from api.fields import CurrentTitleDefault
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator, ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -30,7 +29,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitlePostSerializer(serializers.ModelSerializer):
-    description = serializers.IntegerField(required=False)
+    description = serializers.CharField(required=False)
     genre = serializers.SlugRelatedField(
         many=True, slug_field='slug',
         queryset=Genre.objects.all()
@@ -62,7 +61,7 @@ class TitlePostSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    description = serializers.StringRelatedField(
+    description = serializers.CharField(
         required=False, read_only=True
     )
     rating = serializers.IntegerField(read_only=True)
@@ -112,6 +111,7 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
                 raise ValidationError('Confirmation code is incorrect')
         raise ValidationError('User does not exist')
 
+
 class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.TimeField(required=False)
     last_name = serializers.TimeField(required=False)
@@ -120,10 +120,18 @@ class UserSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         result = super(UserSerializer, self).to_representation(instance)
-        return OrderedDict([(key, result[key]) for key in result if result[key] is not None])
+        return OrderedDict([(key, result[key]) for key in result
+                            if result[key] is not None])
 
     class Meta:
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
         model = User
 
 

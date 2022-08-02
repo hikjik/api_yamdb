@@ -2,25 +2,25 @@
 import hashlib
 from datetime import datetime
 
+from api.filters import TitleFilters
 from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
                              IsAdminOrReadOnly, IsAdminPermission)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              TitleGetSerializer, TitlePostSerializer,
-                             UserSingUpSerializer, UserGetTokenSerializer,
-                             UserSerializer,)
+                             UserGetTokenSerializer, UserSerializer,
+                             UserSingUpSerializer)
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets, status
+from rest_framework import mixins, status, viewsets
 from rest_framework.filters import SearchFilter
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
-
 
 
 def send_confirmation_code(data):
@@ -49,8 +49,8 @@ def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     token = str(refresh.access_token)
     return token
-    
-  
+
+
 class UserSignUp(APIView):
 
     def post(self, request):
@@ -58,7 +58,7 @@ class UserSignUp(APIView):
         if serializer_1.is_valid():
             username = request.data['username']
             email = request.data['email']
-            if User.objects.filter(username = username, email = email).exists():
+            if User.objects.filter(username=username, email=email).exists():
                 send_confirmation_code(request.data)
                 return Response(serializer_1.data)
             else:
@@ -67,8 +67,12 @@ class UserSignUp(APIView):
                     serializer.save()
                     send_confirmation_code(request.data)
                     return Response(serializer_1.data)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer_1.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(
+            serializer_1.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserGetToken(APIView):
@@ -81,7 +85,9 @@ class UserGetToken(APIView):
         else:
             if 'non_field_errors' in serializer._errors:
                 if serializer._errors['non_field_errors'][0] == 'User does not exist':
-                    return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+                    return Response(
+                        serializer.errors, status=status.HTTP_404_NOT_FOUND
+                    )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -99,6 +105,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save()
 
+
 class ListCreateDestroyViewSet(
         mixins.ListModelMixin,
         mixins.CreateModelMixin,
@@ -111,9 +118,10 @@ class CategoryViewSet(
     ListCreateDestroyViewSet
 ):
     queryset = Category.objects.all()
+    lookup_field = 'slug'
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
@@ -122,8 +130,9 @@ class GenreViewSet(
     ListCreateDestroyViewSet
 ):
     queryset = Genre.objects.all()
+    lookup_field = 'slug'
     serializer_class = GenreSerializer
-    permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly, ]
     pagination_class = LimitOffsetPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
@@ -131,10 +140,10 @@ class GenreViewSet(
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year',)
+    filterset_class = TitleFilters
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
