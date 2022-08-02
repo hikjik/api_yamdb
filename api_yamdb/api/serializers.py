@@ -61,7 +61,7 @@ class TitlePostSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    description = serializers.StringRelatedField(
+    description = serializers.CharField(
         required=False, read_only=True
     )
     rating = serializers.IntegerField(read_only=True)
