@@ -1,11 +1,10 @@
 
-from datetime import datetime
 from collections import OrderedDict
-
-from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator, ValidationError
+from datetime import datetime
 
 from api.fields import CurrentTitleDefault
+from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator, ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -30,7 +29,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitlePostSerializer(serializers.ModelSerializer):
-    description = serializers.IntegerField(required=False)
+    description = serializers.CharField(required=False)
     genre = serializers.SlugRelatedField(
         many=True, slug_field='slug',
         queryset=Genre.objects.all()
@@ -111,6 +110,7 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
             else:
                 raise ValidationError('Confirmation code is incorrect')
         raise ValidationError('User does not exist')
+
 
 class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.TimeField(required=False)
