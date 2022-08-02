@@ -64,7 +64,10 @@ class TitleGetSerializer(serializers.ModelSerializer):
     description = serializers.CharField(
         required=False, read_only=True
     )
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.SerializerMethodField()
+
+    def get_rating(self, obj):
+        return obj.rating
 
     class Meta:
         fields = (

@@ -1,7 +1,7 @@
 
 import hashlib
 from datetime import datetime
-
+from django.db.models import Avg
 from api.filters import TitleFilters
 from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
                              IsAdminOrReadOnly, IsAdminPermission)
@@ -139,7 +139,7 @@ class GenreViewSet(
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+    queryset = Title.objects.annotate(_rating=Avg("reviews__score")).all()
     permission_classes = [IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
