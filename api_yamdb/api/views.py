@@ -1,37 +1,26 @@
-
 import hashlib
 from datetime import datetime
-from django.http import Http404
-
+from rest_framework.decorators import action
+from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
+                             IsAdminOrReadOnly, IsAdminPermission,
+                             IsSuperUserPermission, IsUserAuthenticatedPermission)
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, ReviewSerializer,
+                             TitleGetSerializer, TitlePostSerializer,
+                             UserSingUpSerializer, UserGetTokenSerializer,
+                             UserSerializer,)
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-
-from rest_framework import viewsets, status
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework import mixins, viewsets, status
+from rest_framework.filters import SearchFilter
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.filters import SearchFilter
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from reviews.models import Category, Genre, Review, Title, User
 
-
-from reviews.models import Category, Genre, Title, Review, User
-from api.serializers import (
-    UserSingUpSerializer,
-    UserGetTokenSerializer,
-    UserSerializer,
-    CategorySerializer,
-    GenreSerializer,
-    TitleSerializer,
-    ReviewSerializer,
-    CommentSerializer,
-)
-from api.permissions import (
-    IsAdminOrModeratorOrAuthorOrReadOnly,
-    IsAdminPermission,
-    IsAdminOrReadOnly
-)
 
 
 def send_confirmation_code(data):
@@ -60,8 +49,8 @@ def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     token = str(refresh.access_token)
     return token
-
-
+    
+  
 class UserSignUp(APIView):
 
     def post(self, request):
@@ -101,18 +90,51 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdminPermission,)
     lookup_field = 'username'
+    filter_backends = (SearchFilter,)
+    search_fields = ('username',)
 
-    def retrieve(self, request, *args, **kwargs):
-        if kwargs.get('username') == 'me':
-            return Response(self.get_serializer(request.user).data)
-        return super().retrieve(request, args, kwargs)
+    @action(detail=True, methods=["get"], url_path='me')
+    def get_me(self, request):
+        user = User.objects.filter(username=self.request.user)
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['put'], url_path='me')
+    def patch_me(self, request, pk=None):
+        user = self.get_object()
+        serializer = UserSerializer(data=request.data)
+        if serializer.is_valid():
+            user.save()
+            return Response(serializer.data)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
 
     def perform_create(self, serializer):
         serializer.save()
 
 
+ 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+
+
+
+
+
+
+
+class ListCreateDestroyViewSet(
+        mixins.ListModelMixin,
+        mixins.CreateModelMixin,
+        mixins.DestroyModelMixin,
+        viewsets.GenericViewSet):
+    pass
+
+
+class CategoryViewSet(
+    ListCreateDestroyViewSet
+):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
@@ -121,7 +143,9 @@ class CategoryViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(
+    ListCreateDestroyViewSet
+):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
@@ -132,11 +156,15 @@ class GenreViewSet(viewsets.ModelViewSet):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category', 'genre', 'name', 'year',)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return TitleGetSerializer
+        return TitlePostSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
