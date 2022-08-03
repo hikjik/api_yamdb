@@ -1,15 +1,16 @@
-
 import hashlib
 from datetime import datetime
+from rest_framework.decorators import action
 from django.db.models import Avg
 from api.filters import TitleFilters
 from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
-                             IsAdminOrReadOnly, IsAdminPermission)
+                             IsAdminOrReadOnly, IsAdminPermission,
+                             IsUserAuthenticatedPermission)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              TitleGetSerializer, TitlePostSerializer,
-                             UserGetTokenSerializer, UserSerializer,
-                             UserSingUpSerializer)
+                             UserSingUpSerializer, UserGetTokenSerializer,
+                             UserSerializer, MeSerializer)
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -24,12 +25,12 @@ from reviews.models import Category, Genre, Review, Title, User
 
 
 def send_confirmation_code(data):
-    username = data['username']
-    email = data['email']
+    username=data['username']
+    email=data['email']
 
-    timestamp = datetime.now().timestamp()
-    string_to_hash = username + email + str(timestamp)
-    confirmation_code = hashlib.md5(string_to_hash.encode('utf-8')).hexdigest()
+    timestamp=datetime.now().timestamp()
+    string_to_hash=username + email + str(timestamp)
+    confirmation_code=hashlib.md5(string_to_hash.encode('utf-8')).hexdigest()
 
     send_mail(
         'Verification Code',
@@ -68,10 +69,12 @@ class UserSignUp(APIView):
                     send_confirmation_code(request.data)
                     return Response(serializer_1.data)
                 return Response(
-                    serializer.errors, status=status.HTTP_400_BAD_REQUEST
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
                 )
         return Response(
-            serializer_1.errors, status=status.HTTP_400_BAD_REQUEST
+            serializer_1.errors,
+            status=status.HTTP_400_BAD_REQUEST
         )
 
 
@@ -86,7 +89,8 @@ class UserGetToken(APIView):
             if 'non_field_errors' in serializer._errors:
                 if serializer._errors['non_field_errors'][0] == 'User does not exist':
                     return Response(
-                        serializer.errors, status=status.HTTP_404_NOT_FOUND
+                        serializer.errors,
+                        status=status.HTTP_404_NOT_FOUND
                     )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -96,11 +100,29 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = (IsAdminPermission,)
     lookup_field = 'username'
+    filter_backends = (SearchFilter,)
+    search_fields = ('username',)
 
-    def retrieve(self, request, *args, **kwargs):
-        if kwargs.get('username') == 'me':
-            return Response(self.get_serializer(request.user).data)
-        return super().retrieve(request, args, kwargs)
+    @action(
+        detail=False,
+        methods=["get", "patch"],
+        url_path='me',
+        permission_classes=[IsUserAuthenticatedPermission]
+    )
+    def get_me(self, request):
+
+        if request.method == 'GET':
+            serializer = MeSerializer(request.user)
+            if serializer.is_valid:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            instance = User.objects.get(username=request.user)
+            serializer = MeSerializer(instance, data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                self.perform_update(serializer)
+                return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         serializer.save()
