@@ -82,58 +82,21 @@ class TitleGetSerializer(serializers.ModelSerializer):
         model = Title
 
 
-class UserSingUpSerializer(serializers.ModelSerializer):
-
-    username = serializers.CharField(validators=[])
-    email = serializers.EmailField(validators=[])
-
-    def validate(self, attrs):
-        if attrs['username'] == 'me':
-            raise serializers.ValidationError({"cannot create user me"})
-        return super().validate(attrs)
-
-    class Meta:
-        fields = ('username', 'email')
-        model = User
+class UserSingUpSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
 
 
-class UserGetTokenSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(validators=[])
-    confirmation_code = serializers.CharField(validators=[])
-
-    class Meta:
-        fields = ('username', 'confirmation_code', )
-        model = User
-
-    # def validate(self, data):
-    #     if User.objects.filter(username=data['username']).exists():
-    #         user_obj = User.objects.get(username=data['username'])
-    #         if user_obj.confirmation_code == data['confirmation_code']:
-    #             return data
-    #         else:
-    #             raise ValidationError('Confirmation code is incorrect')
-    #     raise ValidationError('User does not exist')
+class UserGetTokenSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    bio = serializers.CharField(required=False)
-    role = serializers.ChoiceField(
-        choices=['user', 'admin', 'moderator'],
-        required=False,
-    )
-
-    def to_representation(self, instance):
-        my_fields = {'first_name', 'last_name', 'bio', 'role'}
-        data = super().to_representation(instance)
-        for field in my_fields:
-            try:
-                if not data[field]:
-                    data[field] = ""
-            except KeyError:
-                pass
-        return data
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError({"cannot create user me"})
+        return value
 
     class Meta:
         fields = (
@@ -147,39 +110,9 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
 
-class MeSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(required=False)
-    last_name = serializers.CharField(required=False)
-    bio = serializers.CharField(required=False)
-    role = serializers.ChoiceField(
-        choices=['user', 'admin', 'moderator'],
-        required=False,
-        read_only=True,
-    )
-    username = serializers.CharField(required=False)
-    email = serializers.EmailField(required=False)
-
-    def to_representation(self, instance):
-        my_fields = {'first_name', 'last_name', 'bio', 'role'}
-        data = super().to_representation(instance)
-        for field in my_fields:
-            try:
-                if not data[field]:
-                    data[field] = ""
-            except KeyError:
-                pass
-        return data
-
-    class Meta:
-        fields = (
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'bio',
-            'role'
-        )
-        model = User
+class MeSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ("role",)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

@@ -1,5 +1,3 @@
-import hashlib
-from datetime import datetime
 from rest_framework.decorators import action
 from django.db.models import Avg
 from api.filters import TitleFilters
@@ -26,8 +24,8 @@ from reviews.models import Category, Genre, Review, Title, User
 
 
 def send_confirmation_code(data):
-    username=data['username']
-    email=data['email']
+    username = data['username']
+    email = data['email']
 
     user = get_object_or_404(User, username=username)
     confirmation_code = default_token_generator.make_token(user)
@@ -41,12 +39,6 @@ def send_confirmation_code(data):
         [email],
         fail_silently=False,
     )
-
-
-# def get_tokens_for_user(user):
-#     refresh = RefreshToken.for_user(user)
-#     token = str(refresh.access_token)
-#     return token
 
 
 class UserSignUp(APIView):
@@ -79,8 +71,8 @@ class UserGetToken(APIView):
     def post(self, request):
         serializer = UserGetTokenSerializer(data=request.data)
         if serializer.is_valid():
-            username=request.data['username']
-            confirmation_code=request.data['confirmation_code']
+            username = request.data['username']
+            confirmation_code = request.data['confirmation_code']
 
             user = get_object_or_404(User, username=username)
             if default_token_generator.check_token(user, confirmation_code):
@@ -90,19 +82,6 @@ class UserGetToken(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-        #     jwt_token = get_tokens_for_user(
-        #         User.objects.get(username=request.data['username']))
-        #     return Response({'token': jwt_token})
-        # else:
-        #     if 'non_field_errors' in serializer._errors:
-        #         if serializer._errors['non_field_errors'][0] == 'User does not exist':
-        #             return Response(
-        #                 serializer.errors,
-        #                 status=status.HTTP_404_NOT_FOUND
-        #             )
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -129,7 +108,7 @@ class UsersViewSet(viewsets.ModelViewSet):
                 Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             instance = User.objects.get(username=request.user)
-            serializer = MeSerializer(instance, data=request.data)
+            serializer = MeSerializer(instance, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 self.perform_update(serializer)
                 return Response(serializer.data, status=status.HTTP_200_OK)
