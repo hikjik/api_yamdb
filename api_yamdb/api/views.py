@@ -16,16 +16,18 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
 
 
-class UserSignUp(APIView):
+class AuthViewSet(viewsets.GenericViewSet):
+    queryset = User.objects.all()
+    permission_classes = [AllowAny]
 
-    def post(self, request):
+    @action(methods=["post"], detail=False)
+    def signup(self, request):
         serializer = UserSingUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -42,17 +44,8 @@ class UserSignUp(APIView):
         )
         return Response(serializer.data)
 
-    def _get_or_create_user(self, data):
-        try:
-            return User.objects.get(**data)
-        except User.DoesNotExist:
-            serializer = UserSerializer(data=data)
-            serializer.is_valid(raise_exception=True)
-            return serializer.save()
-
-
-class UserGetToken(APIView):
-    def post(self, request):
+    @action(methods=["post"], detail=False)
+    def token(self, request):
         serializer = UserGetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -66,6 +59,14 @@ class UserGetToken(APIView):
             data={"confirmation_code": "Некорректный код подтверждения."},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    def _get_or_create_user(self, data):
+        try:
+            return User.objects.get(**data)
+        except User.DoesNotExist:
+            serializer = UserSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            return serializer.save()
 
 
 class UsersViewSet(viewsets.ModelViewSet):
