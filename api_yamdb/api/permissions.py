@@ -6,10 +6,12 @@ class IsAdminPermission(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_authenticated:
             return (
-                User.objects.get(username=request.user).role == 'admin' or request.user.is_superuser
+                User.objects.get(username=request.user).role == 'admin'
+                or request.user.is_superuser
             )
         else:
             return False
+
 
 class IsSuperUserPermission(BasePermission):
     def has_permission(self, request, view):
@@ -18,12 +20,8 @@ class IsSuperUserPermission(BasePermission):
 
 class IsUserAuthenticatedPermission(BasePermission):
 
-    
     def has_permission(self, request, view):
         return request.user.is_authenticated
-
-    def has_object_permission(self, request, view, obj):
-        return obj.role == request.data['role'] or request.data['role'] is None
 
 
 class IsAdminOrReadOnly(BasePermission):

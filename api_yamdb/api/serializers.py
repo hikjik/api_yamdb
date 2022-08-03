@@ -1,5 +1,4 @@
 from datetime import datetime
-from collections import OrderedDict
 
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator, ValidationError
@@ -111,6 +110,7 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
                 raise ValidationError('Confirmation code is incorrect')
         raise ValidationError('User does not exist')
 
+
 class UserSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
@@ -118,8 +118,7 @@ class UserSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(
         choices=['user', 'admin', 'moderator'],
         required=False,
-        )
-        
+    )
 
     def to_representation(self, instance):
         my_fields = {'first_name', 'last_name', 'bio', 'role'}
@@ -131,10 +130,16 @@ class UserSerializer(serializers.ModelSerializer):
             except KeyError:
                 pass
         return data
-    
 
     class Meta:
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
         model = User
 
 
@@ -145,7 +150,8 @@ class MeSerializer(serializers.ModelSerializer):
     role = serializers.ChoiceField(
         choices=['user', 'admin', 'moderator'],
         required=False,
-        )
+        read_only=True,
+    )
     username = serializers.CharField(required=False)
     email = serializers.EmailField(required=False)
 
@@ -161,9 +167,15 @@ class MeSerializer(serializers.ModelSerializer):
         return data
 
     class Meta:
-        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        fields = (
+            'username',
+            'email',
+            'first_name',
+            'last_name',
+            'bio',
+            'role'
+        )
         model = User
-
 
 
 class ReviewSerializer(serializers.ModelSerializer):

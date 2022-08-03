@@ -1,10 +1,9 @@
 import hashlib
 from datetime import datetime
-from pytest import Instance
 from rest_framework.decorators import action
 from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
                              IsAdminOrReadOnly, IsAdminPermission,
-                             IsSuperUserPermission, IsUserAuthenticatedPermission)
+                             IsUserAuthenticatedPermission)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              TitleGetSerializer, TitlePostSerializer,
@@ -21,7 +20,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from reviews.models import Category, Genre, Review, Title, User
-
 
 
 def send_confirmation_code(data):
@@ -50,8 +48,8 @@ def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)
     token = str(refresh.access_token)
     return token
-    
-  
+
+
 class UserSignUp(APIView):
 
     def post(self, request):
@@ -59,7 +57,7 @@ class UserSignUp(APIView):
         if serializer_1.is_valid():
             username = request.data['username']
             email = request.data['email']
-            if User.objects.filter(username = username, email = email).exists():
+            if User.objects.filter(username=username, email=email).exists():
                 send_confirmation_code(request.data)
                 return Response(serializer_1.data)
             else:
@@ -68,8 +66,14 @@ class UserSignUp(APIView):
                     serializer.save()
                     send_confirmation_code(request.data)
                     return Response(serializer_1.data)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer_1.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(
+            serializer_1.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class UserGetToken(APIView):
@@ -82,7 +86,10 @@ class UserGetToken(APIView):
         else:
             if 'non_field_errors' in serializer._errors:
                 if serializer._errors['non_field_errors'][0] == 'User does not exist':
-                    return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+                    return Response(
+                        serializer.errors,
+                        status=status.HTTP_404_NOT_FOUND
+                    )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -94,12 +101,16 @@ class UsersViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
 
-    @action(detail=False, methods=["get", "patch"], url_path='me', permission_classes=[IsUserAuthenticatedPermission])
+    @action(
+        detail=False,
+        methods=["get", "patch"],
+        url_path='me',
+        permission_classes=[IsUserAuthenticatedPermission]
+    )
     def get_me(self, request):
 
         if request.method == 'GET':
             serializer = MeSerializer(request.user)
-            print(serializer.data)
             if serializer.is_valid:
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
@@ -109,7 +120,7 @@ class UsersViewSet(viewsets.ModelViewSet):
             serializer = MeSerializer(instance, data=request.data)
             if serializer.is_valid(raise_exception=True):
                 self.perform_update(serializer)
-                return Response(serializer.data, status = status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         serializer.save()
