@@ -1,6 +1,8 @@
 import hashlib
 from datetime import datetime
 from rest_framework.decorators import action
+from django.db.models import Avg
+from api.filters import TitleFilters
 from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
                              IsAdminOrReadOnly, IsAdminPermission,
                              IsUserAuthenticatedPermission)
@@ -12,23 +14,23 @@ from api.serializers import (CategorySerializer, CommentSerializer,
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets, status
+from rest_framework import mixins, status, viewsets
 from rest_framework.filters import SearchFilter
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User
 
 
 def send_confirmation_code(data):
-    username = data['username']
-    email = data['email']
+    username=data['username']
+    email=data['email']
 
-    timestamp = datetime.now().timestamp()
-    string_to_hash = username + email + str(timestamp)
-    confirmation_code = hashlib.md5(string_to_hash.encode('utf-8')).hexdigest()
+    timestamp=datetime.now().timestamp()
+    string_to_hash=username + email + str(timestamp)
+    confirmation_code=hashlib.md5(string_to_hash.encode('utf-8')).hexdigest()
 
     send_mail(
         'Verification Code',
@@ -138,9 +140,10 @@ class CategoryViewSet(
     ListCreateDestroyViewSet
 ):
     queryset = Category.objects.all()
+    lookup_field = 'slug'
     serializer_class = CategorySerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly, ]
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
@@ -149,19 +152,20 @@ class GenreViewSet(
     ListCreateDestroyViewSet
 ):
     queryset = Genre.objects.all()
+    lookup_field = 'slug'
     serializer_class = GenreSerializer
-    permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly, ]
     pagination_class = LimitOffsetPagination
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
-    permission_classes = [IsAdminOrReadOnly, IsAuthenticatedOrReadOnly]
+    queryset = Title.objects.annotate(_rating=Avg("reviews__score")).all()
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category', 'genre', 'name', 'year',)
+    filterset_class = TitleFilters
 
     def get_serializer_class(self):
         if self.request.method == 'GET':

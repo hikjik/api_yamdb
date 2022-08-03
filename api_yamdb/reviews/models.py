@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -97,6 +97,12 @@ class Title(models.Model):
         'описание произведения',
         max_length=400
     )
+
+    @property
+    def rating(self):
+        if hasattr(self, "_rating"):
+            return self._rating
+        return self.reviews.aggregate(models.Avg("rating"))
 
     def __str__(self):
         return self.name

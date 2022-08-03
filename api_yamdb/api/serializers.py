@@ -1,9 +1,10 @@
+
+from collections import OrderedDict
 from datetime import datetime
 
+from api.fields import CurrentTitleDefault
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator, ValidationError
-
-from api.fields import CurrentTitleDefault
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -28,7 +29,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitlePostSerializer(serializers.ModelSerializer):
-    description = serializers.IntegerField(required=False)
+    description = serializers.CharField(required=False)
     genre = serializers.SlugRelatedField(
         many=True, slug_field='slug',
         queryset=Genre.objects.all()
@@ -60,10 +61,13 @@ class TitlePostSerializer(serializers.ModelSerializer):
 class TitleGetSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    description = serializers.StringRelatedField(
+    description = serializers.CharField(
         required=False, read_only=True
     )
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.SerializerMethodField()
+
+    def get_rating(self, obj):
+        return obj.rating
 
     class Meta:
         fields = (
