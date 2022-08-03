@@ -15,8 +15,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
 
 from api.filters import TitleFilters
-from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
-                             IsAdminOrReadOnly, IsAdminPermission)
+from api.permissions import (IsAdminOrIsSuperUser,
+                             IsAdminOrModeratorOrAuthorOrReadOnly,
+                             IsAdminOrReadOnly)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              SignInSerializer, SignUpSerializer,
@@ -76,7 +77,7 @@ class AuthViewSet(viewsets.GenericViewSet):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminPermission]
+    permission_classes = [IsAdminOrIsSuperUser]
     pagination_class = LimitOffsetPagination
     filter_backends = [SearchFilter]
     search_fields = ['^username']
