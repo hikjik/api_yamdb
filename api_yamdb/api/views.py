@@ -23,65 +23,49 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
 
 
-def send_confirmation_code(data):
-    username = data['username']
-    email = data['email']
-
-    user = get_object_or_404(User, username=username)
-    confirmation_code = default_token_generator.make_token(user)
-
-    send_mail(
-        'Verification Code',
-        'Hello {}. Your confirmation code is: {}'.format(
-            username,
-            confirmation_code),
-        'from@example.com',
-        [email],
-        fail_silently=False,
-    )
-
-
 class UserSignUp(APIView):
 
     def post(self, request):
-        serializer_1 = UserSingUpSerializer(data=request.data)
-        if serializer_1.is_valid():
-            username = request.data['username']
-            email = request.data['email']
-            if User.objects.filter(username=username, email=email).exists():
-                send_confirmation_code(request.data)
-                return Response(serializer_1.data)
-            else:
-                serializer = UserSerializer(data=request.data)
-                if serializer.is_valid():
-                    serializer.save()
-                    send_confirmation_code(request.data)
-                    return Response(serializer_1.data)
-                return Response(
-                    serializer.errors,
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        return Response(
-            serializer_1.errors,
-            status=status.HTTP_400_BAD_REQUEST
+        serializer = UserSingUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = self._get_or_create_user(serializer.validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+
+        send_mail(
+            subject='Verification Code',
+            message=(
+                f'Hello {user.username}.'
+                f'Your confirmation code is: {confirmation_code}'),
+            from_email='from@example.com',
+            recipient_list=[user.email],
         )
+        return Response(serializer.data)
+
+    def _get_or_create_user(self, data):
+        try:
+            return User.objects.get(**data)
+        except User.DoesNotExist:
+            serializer = UserSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            return serializer.save()
 
 
 class UserGetToken(APIView):
     def post(self, request):
         serializer = UserGetTokenSerializer(data=request.data)
-        if serializer.is_valid():
-            username = request.data['username']
-            confirmation_code = request.data['confirmation_code']
+        serializer.is_valid(raise_exception=True)
 
-            user = get_object_or_404(User, username=username)
-            if default_token_generator.check_token(user, confirmation_code):
-                return Response(data={"token": str(AccessToken.for_user(user))})
-            return Response(
-                data={"confirmation_code": "Некорректный код подтверждения."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        username = request.data['username']
+        confirmation_code = request.data['confirmation_code']
+
+        user = get_object_or_404(User, username=username)
+        if default_token_generator.check_token(user, confirmation_code):
+            return Response(data={"token": str(AccessToken.for_user(user))})
+        return Response(
+            data={"confirmation_code": "Некорректный код подтверждения."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -108,7 +92,8 @@ class UsersViewSet(viewsets.ModelViewSet):
                 Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             instance = User.objects.get(username=request.user)
-            serializer = MeSerializer(instance, data=request.data, partial=True)
+            serializer = MeSerializer(
+                instance, data=request.data, partial=True)
             if serializer.is_valid(raise_exception=True):
                 self.perform_update(serializer)
                 return Response(serializer.data, status=status.HTTP_200_OK)
