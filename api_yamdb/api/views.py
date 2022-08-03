@@ -21,7 +21,7 @@ from api.permissions import (IsAdminOrIsSuperUser,
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              SignInSerializer, SignUpSerializer,
-                             TitleGetSerializer, TitlePostSerializer,
+                             TitleReadOnlySerializer, TitleSerializer,
                              UserMeSerializer, UserSerializer)
 
 
@@ -141,8 +141,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
-            return TitleGetSerializer
-        return TitlePostSerializer
+            return TitleReadOnlySerializer
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

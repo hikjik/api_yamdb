@@ -1,10 +1,10 @@
-
 from datetime import datetime
 
-from api.fields import CurrentTitleDefault
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Comment, Genre, Review, Title, User
+
+from api.fields import CurrentTitleDefault
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -37,76 +37,51 @@ class UserMeSerializer(UserSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-
     class Meta:
-        fields = (
-            'name',
-            'slug'
-        )
+        fields = ("name", "slug")
         model = Category
 
 
 class GenreSerializer(serializers.ModelSerializer):
-
     class Meta:
-        fields = (
-            'name',
-            'slug'
-        )
+        fields = ("name", "slug")
         model = Genre
 
 
-class TitlePostSerializer(serializers.ModelSerializer):
-    description = serializers.CharField(required=False)
+class TitleSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
-        many=True, slug_field='slug',
-        queryset=Genre.objects.all()
+        slug_field="slug",
+        queryset=Genre.objects.all(),
+        many=True,
     )
     category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all()
+        slug_field="slug",
+        queryset=Category.objects.all(),
     )
 
     class Meta:
-        fields = (
-            'id',
-            'name',
-            'year',
-            'description',
-            'genre',
-            'category'
-        )
+        fields = ("id", "name", "year", "description", "genre", "category")
         model = Title
 
         def validate_year(self, value):
             if value > datetime.now().year:
                 raise serializers.ValidationError(
-                    'Нельзя добавлять произведения, которые еще не вышли'
+                    "Нельзя добавлять произведения, которые еще не вышли"
                 )
             return value
 
 
-class TitleGetSerializer(serializers.ModelSerializer):
+class TitleReadOnlySerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
-    description = serializers.CharField(
-        required=False, read_only=True
-    )
     rating = serializers.SerializerMethodField()
 
     def get_rating(self, obj):
         return obj.rating
 
     class Meta:
-        fields = (
-            'id',
-            'name',
-            'year',
-            'rating',
-            'description',
-            'genre',
-            'category'
-        )
+        fields = ("id", "name", "year", "rating",
+                  "description", "genre", "category")
         model = Title
 
 
