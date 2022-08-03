@@ -7,6 +7,35 @@ from rest_framework.validators import UniqueTogetherValidator
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
+class SignUpSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+
+
+class SignInSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ("username", "email", "first_name",
+                  "last_name", "bio", "role")
+        model = User
+
+    def validate_username(self, value):
+        if value == "me":
+            raise serializers.ValidationError(
+                "Использовать имя 'me' в качестве username запрещено"
+            )
+        return value
+
+
+class UserMeSerializer(UserSerializer):
+    class Meta(UserSerializer.Meta):
+        read_only_fields = ("role",)
+
+
 class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -79,39 +108,6 @@ class TitleGetSerializer(serializers.ModelSerializer):
             'category'
         )
         model = Title
-
-
-class UserSingUpSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    email = serializers.EmailField()
-
-
-class UserGetTokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
-
-
-class UserSerializer(serializers.ModelSerializer):
-    def validate_username(self, value):
-        if value == 'me':
-            raise serializers.ValidationError({"cannot create user me"})
-        return value
-
-    class Meta:
-        fields = (
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'bio',
-            'role'
-        )
-        model = User
-
-
-class MeSerializer(UserSerializer):
-    class Meta(UserSerializer.Meta):
-        read_only_fields = ("role",)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
