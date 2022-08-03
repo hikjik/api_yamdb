@@ -11,6 +11,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              TitleGetSerializer, TitlePostSerializer,
                              UserSingUpSerializer, UserGetTokenSerializer,
                              UserSerializer, MeSerializer)
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -20,7 +21,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title, User
 
 
@@ -28,9 +29,8 @@ def send_confirmation_code(data):
     username=data['username']
     email=data['email']
 
-    timestamp=datetime.now().timestamp()
-    string_to_hash=username + email + str(timestamp)
-    confirmation_code=hashlib.md5(string_to_hash.encode('utf-8')).hexdigest()
+    user = get_object_or_404(User, username=username)
+    confirmation_code = default_token_generator.make_token(user)
 
     send_mail(
         'Verification Code',
@@ -41,15 +41,12 @@ def send_confirmation_code(data):
         [email],
         fail_silently=False,
     )
-    user_obj = User.objects.filter(username=username)
-    user_obj.update(confirmation_code=confirmation_code)
-    return confirmation_code
 
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-    token = str(refresh.access_token)
-    return token
+# def get_tokens_for_user(user):
+#     refresh = RefreshToken.for_user(user)
+#     token = str(refresh.access_token)
+#     return token
 
 
 class UserSignUp(APIView):
@@ -82,17 +79,30 @@ class UserGetToken(APIView):
     def post(self, request):
         serializer = UserGetTokenSerializer(data=request.data)
         if serializer.is_valid():
-            jwt_token = get_tokens_for_user(
-                User.objects.get(username=request.data['username']))
-            return Response({'token': jwt_token})
-        else:
-            if 'non_field_errors' in serializer._errors:
-                if serializer._errors['non_field_errors'][0] == 'User does not exist':
-                    return Response(
-                        serializer.errors,
-                        status=status.HTTP_404_NOT_FOUND
-                    )
+            username=request.data['username']
+            confirmation_code=request.data['confirmation_code']
+
+            user = get_object_or_404(User, username=username)
+            if default_token_generator.check_token(user, confirmation_code):
+                return Response(data={"token": str(AccessToken.for_user(user))})
+            return Response(
+                data={"confirmation_code": "Некорректный код подтверждения."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+        #     jwt_token = get_tokens_for_user(
+        #         User.objects.get(username=request.data['username']))
+        #     return Response({'token': jwt_token})
+        # else:
+        #     if 'non_field_errors' in serializer._errors:
+        #         if serializer._errors['non_field_errors'][0] == 'User does not exist':
+        #             return Response(
+        #                 serializer.errors,
+        #                 status=status.HTTP_404_NOT_FOUND
+        #             )
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UsersViewSet(viewsets.ModelViewSet):

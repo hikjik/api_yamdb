@@ -105,14 +105,14 @@ class UserGetTokenSerializer(serializers.ModelSerializer):
         fields = ('username', 'confirmation_code', )
         model = User
 
-    def validate(self, data):
-        if User.objects.filter(username=data['username']).exists():
-            user_obj = User.objects.get(username=data['username'])
-            if user_obj.confirmation_code == data['confirmation_code']:
-                return data
-            else:
-                raise ValidationError('Confirmation code is incorrect')
-        raise ValidationError('User does not exist')
+    # def validate(self, data):
+    #     if User.objects.filter(username=data['username']).exists():
+    #         user_obj = User.objects.get(username=data['username'])
+    #         if user_obj.confirmation_code == data['confirmation_code']:
+    #             return data
+    #         else:
+    #             raise ValidationError('Confirmation code is incorrect')
+    #     raise ValidationError('User does not exist')
 
 
 class UserSerializer(serializers.ModelSerializer):
