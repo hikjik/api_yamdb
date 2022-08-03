@@ -88,7 +88,7 @@ class TitleReadOnlySerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
-        slug_field='username',
+        slug_field="username",
         read_only=True,
     )
     title = serializers.HiddenField(
@@ -96,13 +96,13 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+        fields = ("id", "text", "author", "score", "pub_date", "title")
         model = Review
         validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
-                fields=('author', 'title'),
-                message="Запрещено оставлять отзыв на одно произведение дважды"
+                fields=("author", "title"),
+                message="Запрещено оставлять отзыв на одно произведение дважды",
             ),
         ]
 
@@ -110,10 +110,10 @@ class ReviewSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         default=serializers.CurrentUserDefault(),
-        slug_field='username',
+        slug_field="username",
         read_only=True,
     )
 
     class Meta:
-        fields = ('id', 'text', 'author', 'pub_date')
+        fields = ("id", "text", "author", "pub_date")
         model = Comment
