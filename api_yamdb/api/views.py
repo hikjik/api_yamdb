@@ -1,25 +1,27 @@
-from rest_framework.decorators import action
+from api_yamdb.settings import EMAIL_FROM
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import AccessToken
+from reviews.models import Category, Genre, Review, Title, User
+
 from api.filters import TitleFilters
 from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
                              IsAdminOrReadOnly, IsAdminPermission)
 from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
+                             SignInSerializer, SignUpSerializer,
                              TitleGetSerializer, TitlePostSerializer,
-                             SignUpSerializer, SignInSerializer,
-                             UserSerializer, UserMeSerializer)
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, status, viewsets
-from rest_framework.filters import SearchFilter
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre, Review, Title, User
-from api_yamdb.settings import EMAIL_FROM
+                             UserMeSerializer, UserSerializer)
 
 
 class AuthViewSet(viewsets.GenericViewSet):
@@ -75,6 +77,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminPermission]
+    pagination_class = LimitOffsetPagination
     filter_backends = [SearchFilter]
     search_fields = ['^username']
     lookup_field = 'username'
