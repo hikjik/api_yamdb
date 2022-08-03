@@ -1,9 +1,9 @@
-from api_yamdb.settings import EMAIL_FROM
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -15,8 +15,8 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Category, Genre, Review, Title, User
 
+from api_yamdb.settings import EMAIL_FROM
 from api.filters import TitleFilters
 from api.permissions import (IsAdminOrIsSuperUser,
                              IsAdminOrModeratorOrAuthorOrReadOnly,
@@ -26,6 +26,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              SignInSerializer, SignUpSerializer,
                              TitleReadOnlySerializer, TitleSerializer,
                              UserMeSerializer, UserSerializer)
+from reviews.models import Category, Genre, Review, Title, User
 
 
 class AuthViewSet(GenericViewSet):
@@ -43,7 +44,7 @@ class AuthViewSet(GenericViewSet):
         send_mail(
             subject="Verification Code",
             message=(
-                f"Hello, {user.username}!"
+                f"Hello, {user.username}! "
                 f"Your confirmation code is: {confirmation_code}."
             ),
             from_email=EMAIL_FROM,
