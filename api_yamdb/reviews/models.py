@@ -4,35 +4,42 @@ from django.db import models
 
 
 class User(AbstractUser):
-    USER = 'user'
-    ADMIN = 'admin'
-    MODERATOR = 'moderator'
+    USER = "user"
+    ADMIN = "admin"
+    MODERATOR = "moderator"
 
     ROLES = [
-        (USER, 'Пользователь'),
-        (ADMIN, 'Администратор'),
-        (MODERATOR, 'Модератор'),
+        (USER, "Пользователь"),
+        (ADMIN, "Администратор"),
+        (MODERATOR, "Модератор"),
     ]
 
-    username = models.CharField(
-        max_length=50,
-        unique=True
+    email = models.EmailField(
+        max_length=254,
+        unique=True,
+        verbose_name="Адрес электронной почты",
     )
-    first_name = models.TextField()
-    last_name = models.TextField()
-    bio = models.TextField(
-        blank=True
-    )
-    email = models.EmailField(unique=True)
     role = models.CharField(
+        max_length=16,
         choices=ROLES,
-        max_length=20,
         default=USER,
+        verbose_name="Роль пользователя",
+    )
+    bio = models.TextField(
+        max_length=1024,
+        blank=True,
+        verbose_name="Биография пользователя",
     )
 
+    class Meta:
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+
+    @property
     def is_admin(self):
         return self.role == User.ADMIN
 
+    @property
     def is_moderator(self):
         return self.role == User.MODERATOR
 
