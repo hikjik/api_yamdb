@@ -1,5 +1,6 @@
 import hashlib
 from datetime import datetime
+from pytest import Instance
 from rest_framework.decorators import action
 from api.permissions import (IsAdminOrModeratorOrAuthorOrReadOnly,
                              IsAdminOrReadOnly, IsAdminPermission,
@@ -8,7 +9,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              TitleGetSerializer, TitlePostSerializer,
                              UserSingUpSerializer, UserGetTokenSerializer,
-                             UserSerializer,)
+                             UserSerializer, MeSerializer)
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -93,26 +94,26 @@ class UsersViewSet(viewsets.ModelViewSet):
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
 
-    @action(detail=True, methods=["get"], url_path='me')
+    @action(detail=False, methods=["get", "patch"], url_path='me', permission_classes=[IsUserAuthenticatedPermission])
     def get_me(self, request):
-        user = User.objects.filter(username=self.request.user)
-        serializer = self.get_serializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['put'], url_path='me')
-    def patch_me(self, request, pk=None):
-        user = self.get_object()
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user.save()
-            return Response(serializer.data)
+        if request.method == 'GET':
+            serializer = MeSerializer(request.user)
+            print(serializer.data)
+            if serializer.is_valid:
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
-
+            instance = User.objects.get(username=request.user)
+            serializer = MeSerializer(instance, data=request.data)
+            if serializer.is_valid(raise_exception=True):
+                self.perform_update(serializer)
+                return Response(serializer.data, status = status.HTTP_200_OK)
 
     def perform_create(self, serializer):
         serializer.save()
+
 
 class ListCreateDestroyViewSet(
         mixins.ListModelMixin,
@@ -120,11 +121,6 @@ class ListCreateDestroyViewSet(
         mixins.DestroyModelMixin,
         viewsets.GenericViewSet):
     pass
-
- 
-
-
-
 
 
 class CategoryViewSet(

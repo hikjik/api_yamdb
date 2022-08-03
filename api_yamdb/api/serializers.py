@@ -119,6 +119,35 @@ class UserSerializer(serializers.ModelSerializer):
         choices=['user', 'admin', 'moderator'],
         required=False,
         )
+        
+
+    def to_representation(self, instance):
+        my_fields = {'first_name', 'last_name', 'bio', 'role'}
+        data = super().to_representation(instance)
+        for field in my_fields:
+            try:
+                if not data[field]:
+                    data[field] = ""
+            except KeyError:
+                pass
+        return data
+    
+
+    class Meta:
+        fields = ('username', 'email', 'first_name', 'last_name', 'bio', 'role')
+        model = User
+
+
+class MeSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    bio = serializers.CharField(required=False)
+    role = serializers.ChoiceField(
+        choices=['user', 'admin', 'moderator'],
+        required=False,
+        )
+    username = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
 
     def to_representation(self, instance):
         my_fields = {'first_name', 'last_name', 'bio', 'role'}
