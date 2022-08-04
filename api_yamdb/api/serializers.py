@@ -102,7 +102,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
                 fields=("author", "title"),
-                message="Запрещено оставлять отзыв на одно произведение дважды",
+                message="Запрещено оставлять отзыв на произведение дважды",
             ),
         ]
 
