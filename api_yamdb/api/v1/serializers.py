@@ -1,9 +1,7 @@
 from datetime import datetime
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
-from api.v1.fields import CurrentTitleDefault
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -88,20 +86,21 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field="username",
         read_only=True,
     )
-    title = serializers.HiddenField(
-        default=CurrentTitleDefault(),
-    )
+
+    def validate(self, data):
+        if self.context["request"].method != "POST":
+            return data
+        author = self.context["request"].user
+        title_id = self.context["view"].kwargs["title_id"]
+        if Review.objects.filter(author=author, title__id=title_id).exists():
+            raise serializers.ValidationError(
+                "Запрещено оставлять отзыв на одно произведение дважды"
+            )
+        return data
 
     class Meta:
-        fields = ("id", "text", "author", "score", "pub_date", "title")
+        fields = ("id", "text", "author", "score", "pub_date")
         model = Review
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Review.objects.all(),
-                fields=("author", "title"),
-                message="Запрещено оставлять отзыв на произведение дважды",
-            ),
-        ]
 
 
 class CommentSerializer(serializers.ModelSerializer):
