@@ -1,3 +1,14 @@
 from django.contrib import admin
 
-# Register your models here.
+from reviews.models import (Category, Comment, Genre, GenreTitle, Review,
+                            Title, User)
+
+admin.site.register([
+    Category,
+    Comment,
+    Genre,
+    GenreTitle,
+    Review,
+    Title,
+    User,
+])
