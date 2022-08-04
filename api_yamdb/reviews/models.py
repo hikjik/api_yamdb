@@ -112,6 +112,7 @@ class Title(models.Model):
         max_length=512,
         verbose_name="Описание произведения",
         blank=True,
+        null=True,
     )
 
     class Meta:
