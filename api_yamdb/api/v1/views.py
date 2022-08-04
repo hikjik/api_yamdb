@@ -17,11 +17,11 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
 from api_yamdb.settings import EMAIL_FROM
-from api.filters import TitleFilters
-from api.permissions import (IsAdminOrIsSuperUser,
+from api.v1.filters import TitleFilters
+from api.v1.permissions import (IsAdminOrIsSuperUser,
                              IsAdminOrModeratorOrAuthorOrReadOnly,
                              IsAdminOrReadOnly)
-from api.serializers import (CategorySerializer, CommentSerializer,
+from api.v1.serializers import (CategorySerializer, CommentSerializer,
                              GenreSerializer, ReviewSerializer,
                              SignInSerializer, SignUpSerializer,
                              TitleReadOnlySerializer, TitleSerializer,

@@ -3,7 +3,7 @@ from datetime import datetime
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from api.fields import CurrentTitleDefault
+from api.v1.fields import CurrentTitleDefault
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
