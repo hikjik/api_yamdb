@@ -9,6 +9,13 @@ class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField()
     email = serializers.EmailField()
 
+    def validate_username(self, value):
+        if value == "me":
+            raise serializers.ValidationError(
+                "Использовать имя 'me' в качестве username запрещено"
+            )
+        return value
+
 
 class SignInSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -20,13 +27,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("username", "email", "first_name",
                   "last_name", "bio", "role")
         model = User
-
-    def validate_username(self, value):
-        if value == "me":
-            raise serializers.ValidationError(
-                "Использовать имя 'me' в качестве username запрещено"
-            )
-        return value
 
 
 class UserMeSerializer(UserSerializer):
