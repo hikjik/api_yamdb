@@ -119,12 +119,6 @@ class Title(models.Model):
         verbose_name = "Произведение"
         verbose_name_plural = "Произведения"
 
-    @property
-    def rating(self):
-        if hasattr(self, "_rating"):
-            return self._rating
-        return self.reviews.aggregate(models.Avg("rating"))
-
     def __str__(self):
         return self.name
 
