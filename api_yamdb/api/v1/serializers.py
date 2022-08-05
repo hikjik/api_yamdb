@@ -6,17 +6,9 @@ from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
 
-class SignUpSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = ("username", "email")
-        model = User
-
-    def validate_username(self, value):
-        if value == "me":
-            raise serializers.ValidationError(
-                "Использовать имя 'me' в качестве username запрещено"
-            )
-        return value
+class SignUpSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
 
 
 class SignInSerializer(serializers.Serializer):
@@ -25,6 +17,13 @@ class SignInSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    def validate_username(self, value):
+        if value == "me":
+            raise serializers.ValidationError(
+                "Использовать имя 'me' в качестве username запрещено"
+            )
+        return value
+
     class Meta:
         fields = ("username", "email", "first_name",
                   "last_name", "bio", "role")
