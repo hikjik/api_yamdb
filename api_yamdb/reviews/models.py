@@ -4,6 +4,7 @@ from django.db import models
 from reviews.validators import validate_year
 from users.models import User
 
+
 class Category(models.Model):
     name = models.CharField(
         max_length=256,
