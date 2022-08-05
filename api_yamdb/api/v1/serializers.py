@@ -30,11 +30,6 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
 
 
-class UserMeSerializer(UserSerializer):
-    class Meta(UserSerializer.Meta):
-        read_only_fields = ("role",)
-
-
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         fields = ("name", "slug")

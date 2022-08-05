@@ -25,7 +25,7 @@ from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 GenreSerializer, ReviewSerializer,
                                 SignInSerializer, SignUpSerializer,
                                 TitleReadOnlySerializer, TitleSerializer,
-                                UserMeSerializer, UserSerializer)
+                                UserSerializer)
 from reviews.models import Category, Genre, Review, Title, User
 
 
@@ -80,19 +80,17 @@ class UserViewSet(ModelViewSet):
     search_fields = ["^username"]
     lookup_field = "username"
 
-    @action(
-        methods=["GET", "PATCH"],
-        detail=False,
-        permission_classes=[IsAuthenticated],
-        serializer_class=UserMeSerializer,
-    )
+    @action(methods=["GET", "PATCH"], detail=False,
+            permission_classes=[IsAuthenticated])
     def me(self, request):
         if request.method == "GET":
             serializer = self.get_serializer(request.user)
             return Response(serializer.data)
+
         serializer = self.get_serializer(
             request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+        serializer.validated_data.pop('role', None)
         serializer.save()
         return Response(serializer.data)
 
