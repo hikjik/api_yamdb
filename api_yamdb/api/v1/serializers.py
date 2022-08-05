@@ -6,9 +6,10 @@ from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
 
-class SignUpSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    email = serializers.EmailField()
+class SignUpSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ("username", "email")
+        model = User
 
     def validate_username(self, value):
         if value == "me":

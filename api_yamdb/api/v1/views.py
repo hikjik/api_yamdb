@@ -1,7 +1,6 @@
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
-from django.db.utils import IntegrityError
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -17,7 +16,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from api_yamdb.settings import EMAIL_FROM
 from api.v1.filters import TitleFilters
 from api.v1.permissions import (IsAdmin, IsAdminOrModeratorOrAuthorOrReadOnly,
                                 IsReadOnly)
@@ -26,6 +24,7 @@ from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 SignInSerializer, SignUpSerializer,
                                 TitleReadOnlySerializer, TitleSerializer,
                                 UserSerializer)
+from api_yamdb.settings import EMAIL_FROM
 from reviews.models import Category, Genre, Review, Title, User
 
 
@@ -38,21 +37,18 @@ class AuthViewSet(GenericViewSet):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        try:
-            user, _ = User.objects.get_or_create(**serializer.validated_data)
-            confirmation_code = default_token_generator.make_token(user)
-            send_mail(
-                subject="Verification Code",
-                message=(
-                    f"Hello, {user.username}! "
-                    f"Your confirmation code is: {confirmation_code}."
-                ),
-                from_email=EMAIL_FROM,
-                recipient_list=[user.email],
-            )
-            return Response(serializer.data)
-        except IntegrityError:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject="Verification Code",
+            message=(
+                f"Hello, {user.username}! "
+                f"Your confirmation code is: {confirmation_code}."
+            ),
+            from_email=EMAIL_FROM,
+            recipient_list=[user.email],
+        )
+        return Response(serializer.data)
 
     @action(methods=["POST"], detail=False)
     def token(self, request):
