@@ -19,9 +19,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from api_yamdb.settings import EMAIL_FROM
 from api.v1.filters import TitleFilters
-from api.v1.permissions import (IsAdminOrIsSuperUser,
-                                IsAdminOrModeratorOrAuthorOrReadOnly,
-                                IsAdminOrReadOnly)
+from api.v1.permissions import (IsAdmin, IsAdminOrModeratorOrAuthorOrReadOnly,
+                                IsReadOnly)
 from api.v1.serializers import (CategorySerializer, CommentSerializer,
                                 GenreSerializer, ReviewSerializer,
                                 SignInSerializer, SignUpSerializer,
@@ -75,7 +74,7 @@ class AuthViewSet(GenericViewSet):
 class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminOrIsSuperUser]
+    permission_classes = [IsAdmin]
     pagination_class = LimitOffsetPagination
     filter_backends = [SearchFilter]
     search_fields = ["^username"]
@@ -110,7 +109,7 @@ class ListCreateDestroyViewSet(
 class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
     pagination_class = LimitOffsetPagination
     filter_backends = [SearchFilter]
     search_fields = ["^name"]
@@ -120,7 +119,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
 class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [IsAdminOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
     pagination_class = LimitOffsetPagination
     filter_backends = [SearchFilter]
     search_fields = ["^name"]
@@ -129,7 +128,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
 
 class TitleViewSet(ModelViewSet):
     queryset = Title.objects.annotate(rating=Avg("reviews__score")).all()
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAdminOrReadOnly]
+    permission_classes = [IsAdmin | IsReadOnly]
     pagination_class = LimitOffsetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilters
