@@ -37,7 +37,7 @@ class AuthViewSet(GenericViewSet):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user, _ = User.objects.get_or_create(**serializer.validated_data)
+        user = self._get_or_create_user(serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject="Verification Code",
@@ -49,6 +49,14 @@ class AuthViewSet(GenericViewSet):
             recipient_list=[user.email],
         )
         return Response(serializer.data)
+
+    def _get_or_create_user(self, data):
+        try:
+            return User.objects.get(**data)
+        except User.DoesNotExist:
+            serializer = UserSerializer(data=data)
+            serializer.is_valid(raise_exception=True)
+            return serializer.save()
 
     @action(methods=["POST"], detail=False)
     def token(self, request):
